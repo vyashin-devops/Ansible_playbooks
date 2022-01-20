@@ -1,0 +1,12 @@
+# install_tree.yml
+---
+- hosts: all
+  become: yes
+  tasks:
+   - name: Update apt cache
+     apt: update_cache=yes
+   
+   - name: Install required packages
+     apt: name={{ item }}
+     with_items:
+       - tree

@@ -1,0 +1,8 @@
+# uninstall_tree.yml
+---
+- hosts: all
+  become: yes
+  tasks:
+  
+   - name: Uninstall/remove_tree
+     apt: name=tree state=absent       

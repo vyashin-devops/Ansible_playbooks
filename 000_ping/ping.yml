@@ -1,0 +1,8 @@
+# ping.yml
+---
+- hosts: test_host
+  become: yes
+  tasks:
+  
+   - name: Ping my localhost
+     ping:      
