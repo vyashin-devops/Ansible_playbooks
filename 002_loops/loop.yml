@@ -1,0 +1,64 @@
+---
+- name: Loop Install Apache and Upload Site on Different Servers
+  hosts: all
+  become: yes
+  
+  vars:
+    source_folder: ./mywebsite2
+    destin_folder: /var/www/html
+    
+  tasks:
+   - name: Check and Print LINUX Version
+     debug: var=ansible_os_family
+  
+   - block:  #====== Block of RedHat ======
+
+       - name: Install Apache Web Server for RedHat
+         yum: name=httpd state=latest
+        
+       - name: Start WebServer Service for RedHat
+         service: name=httpd state=started enabled=yes
+       
+       - name: Open :80 Port on RedHat WebServers
+         firewalld: port=80/tcp permanent=yes state=enabled
+
+       - name: Restart Service firewalld on RedHat WebServers
+         service: name=firewalld state=restarted
+ 
+     when: ansible_os_family == "RedHat"
+     
+   - block:  #====== Block of Debian ======
+
+      - name: Install Apache Web Server for Debian
+        yum: name=apache2 state=latest
+    
+      - name: Start WebServer Service for Debian
+        service: name=apache2 state=started enabled=yes
+      
+      - name: Open :80 Port on Debian WebServers
+        ufw: rule=allow port=80 proto=tcp
+
+      - name: Restart Service UFW on Debian WebServers
+        ufw: state=reloaded
+
+     when: ansible_os_family == "Debian" 
+    
+    
+   - name: Copy SitePage folder to WebServers
+     copy: src={{ source_folder }}/{{ item }} dest={{ destin_folder }} mode=0555
+     loop:
+       - "index.html"
+       - "img1.jpg"
+       - "img2.jpg"
+     notify: 
+       - Restart Apache RedHat
+       - Restart Apache Debian 
+
+  handlers:
+   - name: Restart Apache RedHat
+     service: name=httpd state=restarted
+     when: ansible_os_family == "RedHat"
+
+   - name: Restart Apache Debian
+     service: name=apache2 state=restarted
+     when: ansible_os_family == "Debian"
